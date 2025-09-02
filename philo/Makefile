@@ -1,21 +1,22 @@
-NAME = philo
-
-SRCS = main.c args.c init.c routine.c utils.c monitor.c
-OBJS = $(SRCS:.c=.o)
-CC = cc
-CFLAGS = -Wall -Wextra -Werror -pthread
-RM = rm -f
+NAME=philo
+CC=cc
+CFLAGS=-Wall -Wextra -Werror -pthread
+SRC=main.c philosophers.c monitor.c utils.c rules.c parse.c
+OBJ=$(SRC:%.c=%.o)
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ)
+
+%.o: %.c philo.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS)
+	rm -f $(OBJ)
 
 fclean: clean
-	$(RM) $(NAME)
+	rm -f $(NAME)
 
 re: fclean all
 

@@ -1,42 +1,88 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mananton <telesmanuel@hotmail.com>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/02 11:40:31 by mananton          #+#    #+#             */
+/*   Updated: 2025/09/02 11:49:31 by mananton         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
+
+static void	run_single_philo(t_rules *rules)
+{
+	t_philo	*p;
+
+	p = &rules->philos[0];
+	pthread_mutex_lock(&rules->forks[0]);
+	pthread_mutex_lock(&rules->print_mutex);
+	printf("%ld %d has taken a fork\n", get_time() - rules->start_time, p->id);
+	pthread_mutex_unlock(&rules->print_mutex);
+	msleep(rules->time_die);
+	pthread_mutex_lock(&rules->print_mutex);
+	printf("%ld %d died\n", get_time() - rules->start_time, p->id);
+	pthread_mutex_unlock(&rules->print_mutex);
+	pthread_mutex_unlock(&rules->forks[0]);
+}
+
+static void	create_threads(t_rules *rules)
+{
+	int	i;
+
+	i = 0;
+	while (i < rules->num_philo)
+	{
+		pthread_create(&rules->philos[i].thread, NULL, philo_routine,
+			&rules->philos[i]);
+		i++;
+	}
+}
+
+static void	join_threads(t_rules *rules)
+{
+	int	i;
+
+	i = 0;
+	while (i < rules->num_philo)
+	{
+		pthread_join(rules->philos[i].thread, NULL);
+		i++;
+	}
+}
+
+static void	cleanup(t_rules *r)
+{
+	destroy_mutexes(r);
+	free(r->forks);
+	free(r->philos);
+}
 
 int	main(int argc, char **argv)
 {
 	t_rules		rules;
-	t_philo		*philos;
-	pthread_t	monitor_thread;
-	int			i;
+	pthread_t	monitor;
 
-	if (parse_args(argc, argv, &rules))
+	if (init_rules(&rules, argc, argv))
 	{
-		write(2, "Error: argumentos invalidos\n", 28);
+		printf("Error: invalid arguments\n");
 		return (1);
 	}
-	if (init_mutexes(&rules))
-	{
-		write(2, "Erro ao inicializar mutexes\n", 28);
+	rules.start_time = get_time();
+	if (init_philosophers(&rules))
 		return (1);
-	}
-	if (init_philos(&philos, &rules))
+	if (rules.num_philo == 1)
 	{
-		write(2, "Erro ao inicializar filosofos\n", 30);
-		return (1);
+		run_single_philo(&rules);
+		cleanup(&rules);
+		return (0);
 	}
-	rules.start_time = get_time_ms();
-	i = 0;
-	while (i < rules.n_philo)
-	{
-		philos[i].last_meal = rules.start_time;
-		pthread_create(&philos[i].thread_id, NULL, &routine, &philos[i]);
-		i++;
-	}
-	pthread_create(&monitor_thread, NULL, &monitor, philos);
-	pthread_join(monitor_thread, NULL);
-	i = 0;
-	while (i < rules.n_philo)
-	{
-		pthread_join(philos[i].thread_id, NULL);
-		i++;
-	}
+	create_threads(&rules);
+	pthread_create(&monitor, NULL, monitor_routine, &rules);
+	join_threads(&rules);
+	pthread_join(monitor, NULL);
+	cleanup(&rules);
 	return (0);
 }
