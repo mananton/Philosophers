@@ -1,7 +1,7 @@
 NAME=philo
 CC=cc
 CFLAGS=-Wall -Wextra -Werror -pthread
-SRC=main.c philosophers.c monitor.c utils.c rules.c parse.c
+SRC=main.c philosophers.c philo_actions.c monitor.c utils.c rules.c parse.c
 OBJ=$(SRC:%.c=%.o)
 
 all: $(NAME)

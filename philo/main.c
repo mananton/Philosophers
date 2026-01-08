@@ -6,7 +6,7 @@
 /*   By: mananton <telesmanuel@hotmail.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/02 11:40:31 by mananton          #+#    #+#             */
-/*   Updated: 2025/09/02 11:49:31 by mananton         ###   ########.fr       */
+/*   Updated: 2026/01/08 10:49:35 by mananton         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,10 @@ static void	run_single_philo(t_rules *rules)
 	t_philo	*p;
 
 	p = &rules->philos[0];
+	pthread_mutex_lock(&rules->meal_check);
+	rules->start_time = get_time();
+	p->last_meal = rules->start_time;
+	pthread_mutex_unlock(&rules->meal_check);
 	pthread_mutex_lock(&rules->forks[0]);
 	pthread_mutex_lock(&rules->print_mutex);
 	printf("%ld %d has taken a fork\n", get_time() - rules->start_time, p->id);
@@ -28,7 +32,7 @@ static void	run_single_philo(t_rules *rules)
 	pthread_mutex_unlock(&rules->forks[0]);
 }
 
-static void	create_threads(t_rules *rules)
+static void	start_simulation(t_rules *rules, pthread_t *monitor)
 {
 	int	i;
 
@@ -39,9 +43,19 @@ static void	create_threads(t_rules *rules)
 			&rules->philos[i]);
 		i++;
 	}
+	pthread_mutex_lock(&rules->meal_check);
+	rules->start_time = get_time();
+	i = 0;
+	while (i < rules->num_philo)
+	{
+		rules->philos[i].last_meal = rules->start_time;
+		i++;
+	}
+	pthread_mutex_unlock(&rules->meal_check);
+	pthread_create(monitor, NULL, monitor_routine, rules);
 }
 
-static void	join_threads(t_rules *rules)
+static void	join_threads(t_rules *rules, pthread_t monitor)
 {
 	int	i;
 
@@ -51,6 +65,7 @@ static void	join_threads(t_rules *rules)
 		pthread_join(rules->philos[i].thread, NULL);
 		i++;
 	}
+	pthread_join(monitor, NULL);
 }
 
 static void	cleanup(t_rules *r)
@@ -70,7 +85,7 @@ int	main(int argc, char **argv)
 		printf("Error: invalid arguments\n");
 		return (1);
 	}
-	rules.start_time = get_time();
+	rules.start_time = 0;
 	if (init_philosophers(&rules))
 		return (1);
 	if (rules.num_philo == 1)
@@ -79,10 +94,8 @@ int	main(int argc, char **argv)
 		cleanup(&rules);
 		return (0);
 	}
-	create_threads(&rules);
-	pthread_create(&monitor, NULL, monitor_routine, &rules);
-	join_threads(&rules);
-	pthread_join(monitor, NULL);
+	start_simulation(&rules, &monitor);
+	join_threads(&rules, monitor);
 	cleanup(&rules);
 	return (0);
 }

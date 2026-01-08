@@ -6,7 +6,7 @@
 /*   By: mananton <telesmanuel@hotmail.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/02 11:41:02 by mananton          #+#    #+#             */
-/*   Updated: 2025/09/02 11:52:29 by mananton         ###   ########.fr       */
+/*   Updated: 2026/01/06 11:17:00 by mananton         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ int	init_philosophers(t_rules *rules)
 		ph = &rules->philos[i];
 		ph->id = i + 1;
 		ph->meals_eaten = 0;
-		ph->last_meal = rules->start_time;
+		ph->last_meal = 0;
 		ph->left_fork = &rules->forks[i];
 		ph->right_fork = &rules->forks[(i + 1) % rules->num_philo];
 		ph->rules = rules;

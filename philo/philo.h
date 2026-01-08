@@ -6,7 +6,7 @@
 /*   By: mananton <telesmanuel@hotmail.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/02 11:40:52 by mananton          #+#    #+#             */
-/*   Updated: 2025/09/02 11:41:49 by mananton         ###   ########.fr       */
+/*   Updated: 2026/01/08 12:30:49 by mananton         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,10 +52,15 @@ struct					s_rules
 
 long					get_time(void);
 void					msleep(long ms);
+void					msleep_until_stop(t_rules *rules, long ms);
+void					usleep_until_stop(t_rules *rules, long us);
 int						ft_atoi(const char *str);
 int						init_rules(t_rules *rules, int argc, char **argv);
 int						init_philosophers(t_rules *rules);
 void					destroy_mutexes(t_rules *rules);
+
+void					print_state(t_philo *philo, const char *msg);
+void					eat(t_philo *philo);
 
 void					*philo_routine(void *arg);
 void					*monitor_routine(void *arg);
